@@ -216,7 +216,7 @@ class SendGridTransport implements Swift_Transport
             foreach ($attachments as $attachment) {
                 if ($attachment instanceof Swift_Mime_Attachment) {
                     $sAttachment = new SendGrid\Mail\Attachment();
-                    $sAttachment->setContent(base64_encode($attachment->getBody()));
+                    $sAttachment->setContent($attachment->getBody());
                     $sAttachment->setType($attachment->getContentType());
                     $sAttachment->setFilename($attachment->getFilename());
                     $sAttachment->setDisposition($attachment->getDisposition());
