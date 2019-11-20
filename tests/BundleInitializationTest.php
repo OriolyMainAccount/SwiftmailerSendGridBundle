@@ -2,10 +2,11 @@
 
 namespace ExpertCoder\Swiftmailer\SendGridBundle\Tests;
 
-use Nyholm\BundleTest\BaseBundleTestCase;
-use Nyholm\BundleTest\CompilerPass\PublicServicePass;
 use ExpertCoder\Swiftmailer\SendGridBundle\ExpertCoderSwiftmailerSendGridBundle;
 use ExpertCoder\Swiftmailer\SendGridBundle\Services\SendGridTransport;
+use Nyholm\BundleTest\BaseBundleTestCase;
+use Nyholm\BundleTest\CompilerPass\PublicServicePass;
+use Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle;
 
 class BundleInitializationTest extends BaseBundleTestCase
 {
@@ -22,6 +23,7 @@ class BundleInitializationTest extends BaseBundleTestCase
         $this->addCompilerPass(new PublicServicePass('|swiftmailer.mailer.transport.expertcoder_swift_mailer.*|'));
         // Create a new Kernel
         $kernel = $this->createKernel();
+        $kernel->addBundle(SwiftmailerBundle::class);
 
         // Add some configuration
         $kernel->addConfigFile(__DIR__.'/config_test.yml');
@@ -60,6 +62,24 @@ class BundleInitializationTest extends BaseBundleTestCase
         $mailer = new \Swift_Mailer($transport);
         $result = $mailer->send($message);
 
-        $this->assertEquals(0, $mailer->send($message)); // This should gives us 0 for no email sent
+        $this->assertSame(0, $mailer->send($message)); // This should gives us 0 for no email sent
+    }
+
+    public function testSimpleMailWithReplyToField()
+    {
+        $message = (new \Swift_Message('[Test] SwiftSendGrid'))
+            ->setFrom('noreply@swiftsendgrid.bundle')
+            ->setTo('nobody@send.grid')
+            ->setBody('Test body.', 'text/plain')
+            ->setReplyTo('demo@mail.demo', 'Demo')
+        ;
+        $transport = $this->getContainer()->get('swiftmailer.mailer.transport.expertcoder_swift_mailer.send_grid');
+        $transport->setHttpClientOptions([
+            'curl' => [CURLOPT_TIMEOUT => 1],
+        ]);
+        $mailer = new \Swift_Mailer($transport);
+        $result = $mailer->send($message);
+
+        $this->assertSame(0, $mailer->send($message)); // This should gives us 0 for no email sent
     }
 }
